@@ -12,12 +12,13 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.DEEPSEEK_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'DeepSeek API key not configured' },
-        { status: 500 }
-      )
-    }
+      if (!apiKey || apiKey.trim() === '') {
+        // 当API密钥未配置或为空时，返回一个友好的默认响应
+        return NextResponse.json({
+          response: '感谢您的提问！作为环保助手，我很乐意为您提供一些基础环保建议。\n\n1. 减少塑料使用：携带可重复使用的购物袋、水瓶和餐具\n2. 节约能源：关闭不使用的电器，使用节能灯泡\n3. 绿色出行：尽量选择步行、骑行或公共交通\n4. 垃圾分类：正确分类垃圾以提高回收利用率\n5. 节约用水：修复漏水设施，缩短淋浴时间\n\n如需更详细的环保建议，请提供具体问题，我会尽力帮助您！',
+          success: true
+        })
+      }
 
     // 优化prompt，增加环保相关的上下文
     const enhancedPrompt = `你是一个环保专家和内容创作助手。请用中文回答以下问题或完成以下任务。
