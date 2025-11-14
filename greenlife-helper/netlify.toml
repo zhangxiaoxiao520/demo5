@@ -1,17 +1,16 @@
 [build]
   command = "npm run build"
-  publish = ".next/static"
-
+  publish = ".next"
+  
 [build.environment]
   NODE_VERSION = "20"
 
 # Netlify Next.js Runtime settings
 [[plugins]]
-package = "@netlify/plugin-nextjs"
+  package = "@netlify/plugin-nextjs"
 
+# Simple redirect rule for Next.js SPA fallback
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/"
   status = 200
-  force = true
-  query = {path = "*"}
