@@ -1,11 +1,17 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = ".next/static"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
+
+# Netlify Next.js Runtime settings
+[[plugins]]
+package = "@netlify/plugin-nextjs"
 
 [[redirects]]
   from = "/*"
-  to = "/"
+  to = "/index.html"
   status = 200
+  force = true
+  query = {path = "*"}
