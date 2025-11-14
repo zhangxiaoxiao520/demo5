@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试Supabase数据插入</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        secondary: '#059669',
+                        dark: '#064e3b',
+                        light: '#d1fae5',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-hover {
+                transition: all 0.3s ease;
+            }
+            .btn-hover:hover {
+                transform: translateY(-2px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+    <div class="container mx-auto px-4 py-12 max-w-3xl">
+        <div class="text-center mb-10">
+            <h1 class="text-[clamp(1.8rem,5vw,2.5rem)] font-bold text-dark mb-3">Supabase 示例数据测试</h1>
+            <p class="text-gray-600 text-lg">通过浏览器直接向Supabase数据库插入测试数据</p>
+        </div>
+
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fa fa-database mr-2 text-primary"></i> 数据库连接配置
+            </h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="supabaseUrl" class="block text-sm font-medium text-gray-700 mb-1">Supabase URL</label>
+                    <input 
+                        type="text" 
+                        id="supabaseUrl" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
+                        value="https://ubdyfpjtlioxxtllmpvq.supabase.co"
+                        placeholder="输入您的Supabase URL"
+                    >
+                </div>
+                <div>
+                    <label for="supabaseKey" class="block text-sm font-medium text-gray-700 mb-1">Supabase Anon Key</label>
+                    <input 
+                        type="text" 
+                        id="supabaseKey" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
+                        value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZHlmcGp0bGlveHR4bGxtcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1MTQzMjMsImV4cCI6MjA3NzA5MDMyM30.J_IZ2C8xa4Fsf1JVTYSfOnAVSHwaKylz1Oc1_WsgQ-0"
+                        placeholder="输入您的Supabase匿名密钥"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl card-shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fa fa-file-text-o mr-2 text-primary"></i> 示例数据选择
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="selectDataOption('logs')">
+                    <input type="radio" id="logs" name="dataType" value="logs" checked class="mr-2">
+                    <label for="logs" class="text-gray-800">4条日志数据</label>
+                    <p class="text-sm text-gray-500 mt-1">包含info、warning、error级别的日志示例</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" onclick="selectDataOption('custom')">
+                    <input type="radio" id="custom" name="dataType" value="custom" class="mr-2">
+                    <label for="custom" class="text-gray-800">自定义日志</label>
+                    <p class="text-sm text-gray-500 mt-1">输入自定义日志内容</p>
+                </div>
+            </div>
+            
+            <div id="customLogContainer" class="mt-6 hidden">
+                <div class="mb-4">
+                    <label for="logLevel" class="block text-sm font-medium text-gray-700 mb-1">日志级别</label>
+                    <select id="logLevel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                        <option value="debug">Debug</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="logMessage" class="block text-sm font-medium text-gray-700 mb-1">日志消息</label>
+                    <input 
+                        type="text" 
+                        id="logMessage" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                        placeholder="输入日志消息"
+                    >
+                </div>
+                <div class="mb-4">
+                    <label for="logSource" class="block text-sm font-medium text-gray-700 mb-1">来源</label>
+                    <input 
+                        type="text" 
+                        id="logSource" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                        placeholder="输入日志来源"
+                        value="browser"
+                    >
+                </div>
+                <div>
+                    <label for="logDetails" class="block text-sm font-medium text-gray-700 mb-1">详细信息 (JSON格式)</label>
+                    <textarea 
+                        id="logDetails" 
+                        rows="3" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+                        placeholder="{\"key\": \"value\"}"
+                        value="{}"
+                    >{"timestamp": ""}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <button id="insertButton" class="w-full bg-primary hover:bg-secondary text-white font-medium py-3 px-6 rounded-lg btn-hover flex items-center justify-center">
+            <i class="fa fa-paper-plane mr-2"></i> 插入示例数据到Supabase
+        </button>
+
+        <div id="resultContainer" class="mt-8 hidden">
+            <div id="successResult" class="bg-light border-l-4 border-primary p-4 rounded-r-lg hidden">
+                <div class="flex items-start">
+                    <i class="fa fa-check-circle text-primary text-xl mt-0.5 mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-dark">数据插入成功！</h3>
+                        <p id="successMessage" class="text-gray-700 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="errorResult" class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg hidden">
+                <div class="flex items-start">
+                    <i class="fa fa-exclamation-circle text-red-500 text-xl mt-0.5 mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-red-700">数据插入失败</h3>
+                        <p id="errorMessage" class="text-gray-700 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sampleDataPreview" class="mt-8 bg-white rounded-xl card-shadow p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fa fa-eye mr-2 text-primary"></i> 插入的数据预览
+            </h2>
+            <pre id="dataPreview" class="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm text-gray-800"></pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.min.js"></script>
+    <script>
+        // 选择数据选项
+        function selectDataOption(option) {
+            document.getElementById('logs').checked = option === 'logs';
+            document.getElementById('custom').checked = option === 'custom';
+            document.getElementById('customLogContainer').classList.toggle('hidden', option !== 'custom');
+        }
+
+        // 生成示例日志数据
+        function generateSampleLogs() {
+            const now = new Date().toISOString();
+            return [
+                {
+                    log_level: 'info',
+                    message: '浏览器测试 - 系统信息',
+                    details: JSON.stringify({ browser: navigator.userAgent, timestamp: now, test: true }),
+                    source: 'browser-test'
+                },
+                {
+                    log_level: 'warning',
+                    message: '浏览器测试 - 警告信息',
+                    details: JSON.stringify({ code: 'TEST001', description: '这是一条测试警告', timestamp: now }),
+                    source: 'browser-test'
+                },
+                {
+                    log_level: 'error',
+                    message: '浏览器测试 - 错误信息',
+                    details: JSON.stringify({ error_code: 'ERR_TEST', message: '这是一条测试错误', timestamp: now }),
+                    source: 'browser-test'
+                },
+                {
+                    log_level: 'info',
+                    message: '浏览器测试 - 用户交互',
+                    details: JSON.stringify({ action: 'data_insert_test', user_id: 'test_user', timestamp: now }),
+                    source: 'browser-test'
+                }
+            ];
+        }
+
+        // 获取自定义日志数据
+        function getCustomLogData() {
+            try {
+                const detailsStr = document.getElementById('logDetails').value;
+                let details = {};
+                if (detailsStr) {
+                    details = JSON.parse(detailsStr);
+                }
+                // 添加时间戳
+                details.timestamp = new Date().toISOString();
+                
+                return [{
+                    log_level: document.getElementById('logLevel').value,
+                    message: document.getElementById('logMessage').value || '自定义日志消息',
+                    details: JSON.stringify(details),
+                    source: document.getElementById('logSource').value || 'custom'
+                }];
+            } catch (e) {
+                alert('详细信息必须是有效的JSON格式！');
+                return null;
+            }
+        }
+
+        // 显示结果
+        function showResult(success, message) {
+            const resultContainer = document.getElementById('resultContainer');
+            const successResult = document.getElementById('successResult');
+            const errorResult = document.getElementById('errorResult');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            resultContainer.classList.remove('hidden');
+            successResult.classList.toggle('hidden', !success);
+            errorResult.classList.toggle('hidden', success);
+            
+            if (success) {
+                successMessage.textContent = message;
+            } else {
+                errorMessage.textContent = message;
+            }
+        }
+
+        // 显示数据预览
+        function showDataPreview(data) {
+            const previewContainer = document.getElementById('sampleDataPreview');
+            const dataPreview = document.getElementById('dataPreview');
+            
+            previewContainer.classList.remove('hidden');
+            dataPreview.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // 插入数据到Supabase
+        async function insertDataToSupabase() {
+            const button = document.getElementById('insertButton');
+            button.disabled = true;
+            button.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 正在插入数据...';
+            
+            try {
+                const supabaseUrl = document.getElementById('supabaseUrl').value;
+                const supabaseKey = document.getElementById('supabaseKey').value;
+                
+                if (!supabaseUrl || !supabaseKey) {
+                    throw new Error('请填写Supabase URL和密钥');
+                }
+                
+                // 创建Supabase客户端
+                const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // 获取要插入的数据
+                let data;
+                if (document.getElementById('logs').checked) {
+                    data = generateSampleLogs();
+                } else {
+                    data = getCustomLogData();
+                    if (!data) return;
+                }
+                
+                // 显示数据预览
+                showDataPreview(data);
+                
+                // 插入数据
+                const { error } = await supabase
+                    .from('logs')
+                    .insert(data);
+                
+                if (error) {
+                    throw new Error(`Supabase错误: ${error.message}`);
+                }
+                
+                showResult(true, `成功插入 ${data.length} 条数据到Supabase的logs表！`);
+                
+            } catch (error) {
+                showResult(false, error.message);
+                console.error('插入数据错误:', error);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa fa-paper-plane mr-2"></i> 插入示例数据到Supabase';
+            }
+        }
+
+        // 事件监听
+        document.getElementById('insertButton').addEventListener('click', insertDataToSupabase);
+        
+        // 初始化页面
+        window.addEventListener('DOMContentLoaded', () => {
+            selectDataOption('logs');
+        });
+    </script>
+</body>
+</html>
