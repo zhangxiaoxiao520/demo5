@@ -79,10 +79,23 @@ export default function ProfilePage() {
       
       // 更新用户统计数据
       if (profile) {
-        setProfile(prev => ({
-          ...prev,
-          posts_count: prev.posts_count - 1
-        }))
+        setProfile(prev => {
+          // 确保返回的对象符合Profile类型定义
+          if (!prev) return profile;
+          return {
+            id: prev.id,
+            username: prev.username,
+            email: prev.email,
+            avatar_url: prev.avatar_url,
+            bio: prev.bio,
+            location: prev.location,
+            eco_points: prev.eco_points,
+            posts_count: prev.posts_count - 1,
+            likes_count: prev.likes_count,
+            comments_count: prev.comments_count,
+            created_at: prev.created_at
+          };
+        });
       }
       
       // 显示成功消息
